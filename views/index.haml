@@ -1,0 +1,47 @@
+%section.header{:role => :heading}
+  .navigation
+    .frame
+      %nav.menu{:role => :menu}
+        %ul
+          %li
+            %a.login{:href => "/login"} Login
+  .title
+    .frame
+      %header.header
+        %hgroup
+          %h1
+            %a{:href => "/"}= "<span>Ubiquitously</span><span class='me'>me</span>"
+%section.body{:role => :main}
+  .content
+    .frame
+      %form#content-form{:action => "/", :method => :post, :autocomplete => :off}
+        .steps
+          %fieldset.step#step-one
+            %h2 Point it out
+            .field
+              %label{:for => :url} Url
+              %input#url-input{:name => :url, :type => :text}/
+            .field
+              %label{:for => :title} Title
+              %input#title-input{:name => :title, :type => :text}/
+            .field
+              %label{:for => :description} Description
+              %textarea#description-input{:name => :description, :type => :text}
+            .field
+              %label{:for => :tags} Tags 
+              %input#tags-input{:name => :tags, :type => :text}/
+          %fieldset.step#step-two
+            %h2 Send it everywhere
+            - Ubiquitously.services.each do |service|
+              .field
+                %label= service.titleize
+                %input.service{:type => :checkbox, :name => "services[]", :value => service}/
+            .send
+              %input#submit{:type => :submit, :value => "Send"}
+        #next.pager= "Next →"
+        #previous.pager= "← Previous"
+%section.footer{:role => :contentinfo}
+  .navigation
+    .frame
+      %nav.menu{:role => :menu}
+      
