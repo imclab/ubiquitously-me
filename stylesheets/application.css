@@ -132,8 +132,12 @@ html, body {
   padding: 5px 10px; }
   .document > .header .navigation a {
     color: #9fb0b7; }
+  .document > .header .navigation ul li {
+    display: inline-block;
+    padding: 0px 0px 0px 20px; }
 .document > .header .title {
   text-align: center;
+  background: #e2e3e5;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second');
   /* for IE */
   background: -webkit-gradient(linear, left top, left bottom, from(white), to(#e2e3e5));
@@ -193,6 +197,7 @@ h2, h3, #input {
     position: relative;
     width: 920px; }
     .document > .body .step#step-one {
+      background: #317284;
       filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second');
       /* for IE */
       background: -webkit-gradient(linear, left top, left bottom, from(#4b8fa0), to(#317284));
@@ -203,6 +208,7 @@ h2, h3, #input {
       .document > .body .step#step-one h2 {
         color: white; }
     .document > .body .step#step-two {
+      background: #a01625;
       filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second');
       /* for IE */
       background: -webkit-gradient(linear, left top, left bottom, from(#ba2237), to(#a01625));
@@ -223,6 +229,7 @@ h2, h3, #input {
     .document > .body .step .field input[type=text], .document > .body .step .field textarea {
       width: 906px;
       padding: 5px;
+      background: white;
       filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second');
       /* for IE */
       background: -webkit-gradient(linear, left top, left bottom, from(#e2e3e5), to(white));
@@ -314,12 +321,16 @@ h2, h3, #input {
 #account-form {
   display: none; }
 
+textarea {
+  overflow: auto; }
+
 .document > .footer {
   bottom: 0;
   width: 100%;
   z-index: 1000px; }
   .document > .footer .navigation {
     height: 30px;
+    background: white;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second');
     /* for IE */
     background: -webkit-gradient(linear, left top, left bottom, from(#e2e3e5), to(white));

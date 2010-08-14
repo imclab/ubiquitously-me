@@ -4,6 +4,12 @@
       %nav.menu{:role => :menu}
         %ul
           %li
+            %a.login{:href => "/"} Post
+          %li
+            %a.login{:href => "/whats-this"} What's this?
+          %li
+            %a.login{:href => "/tip"} Tips
+          %li
             %a.login{:href => "/login"} Login
   .title
     .frame
@@ -17,7 +23,7 @@
       %form#content-form{:action => "/", :method => :post, :autocomplete => :off}
         .steps
           %fieldset.step#step-one
-            %h2 Point it out
+            %h2 What
             .field
               %label{:for => :url} Url
               %input#url-input{:name => :url, :type => :text}/
@@ -30,8 +36,26 @@
             .field
               %label{:for => :tags} Tags 
               %input#tags-input{:name => :tags, :type => :text}/
+          -#
+            %fieldset.choices
+              .field
+                %label{:for => :vote} Vote 
+                %input{:name => :vote, :type => :radiobutton, :value => :none}/
+                %input{:name => :vote, :type => :radiobutton, :value => :up}/
+                %input{:name => :vote, :type => :radiobutton, :value => :down}/
+              .field
+                %label{:for => :rating} Rating 
+                %select#rating-input{:name => :rating}
+                  %option{:value => 1} 1
+                  %option{:value => 2} 2
+                  %option{:value => 3} 3
+                  %option{:value => 4} 4
+                  %option{:value => 5} 5
+              .field
+                %label{:for => :private} Private
+                %input{:name => :private, :type => :checkbox}/
           %fieldset.step#step-two
-            %h2 Send it everywhere
+            %h2 Where
             - Ubiquitously.services.each do |service|
               .field
                 %label= service.titleize

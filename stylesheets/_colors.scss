@@ -11,6 +11,7 @@ $submit-color: #a6ede3;
 $background-color: #e2e3e5;
 
 @mixin gradient($first, $second) {
+  background: $second;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$first', endColorstr='$second'); /* for IE */
   background: -webkit-gradient(linear, left top, left bottom, from($first), to($second)); /* for webkit browsers */
   background: -moz-linear-gradient(top,  $first,  $second); /* for firefox 3.6+ */

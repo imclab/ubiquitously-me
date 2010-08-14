@@ -11,6 +11,8 @@ require 'json'
 require 'open-uri'
 require 'ubiquitously'
 
+Ubiquitously.configure("config/_secret.yml")
+
 helpers do
   include Insightful
   include ActionView::Helpers::TextHelper
@@ -38,18 +40,19 @@ def create(params)
   puts params.inspect
   user = Ubiquitously::User.new(
     :username => "viatropos",
-    :cookies_path => "_cookies.yml"
+    :cookies_path => "config/_cookies.yml"
   )
-  tags = params["tags"].split(" ") if params["tags"]
+  tags = params["tags"].split(/,\s+/) if params["tags"]
   post = Ubiquitously::Post.new(
     :url => urlify(params["url"]),
     :title => params["title"],
     :description => params["description"],
     :tags => tags,
-    :user => user
+    :user => user,
+    :categories => tags
   )
-  puts post.inspect
-  #post.save(params["services"])
+  result = post.save(params["services"])
+  JSON.generate(params)
 end
 
 get "/" do
@@ -64,7 +67,7 @@ post "/start" do
   begin
     url = urlify(params["url"])
     html = Nokogiri::HTML(open(url).read)
-    title = html.xpath("//title").first.text
+    title = html.xpath("//title").first.text.to_s.strip
     description = html.xpath("//meta[@name='description']").first["content"] rescue ""
     tags = html.xpath("//meta[@name='keywords']").first["content"] rescue ""
     tags = tags.split(",").map do |tag|

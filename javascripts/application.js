@@ -28,12 +28,11 @@ $(document).ready(function() {
         if (props.indexOf(formData[prop].name) != -1 && formData[prop].value) {
           firstStep = false;
         }
-        if (formData[prop].name == "services[]") {
+        if (formData[prop].name == "services[]" && services.indexOf(formData[prop].value) == -1) {
           services.push(formData[prop].value);
         }
       }
-      services = $.unique(services);
-      
+            
       if (firstStep) {
         options.url = "/start";
         $.jGrowl("Loading metadata for " + $("#url-input").val(), {
@@ -48,8 +47,7 @@ $(document).ready(function() {
           if (!service) {
             return false;
           }
-          
-          $("input.service[value=" + service + "]").attr("checked", false).attr("disabled", true);
+          $("input.service[value=" + service + "]").attr("checked", false);//.attr("disabled", true);
           options.url = "/finish";
           $.jGrowl("Publishing to " + service + "...", {
             life: 1500,
