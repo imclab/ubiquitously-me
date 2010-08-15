@@ -1,83 +1,106 @@
-var sys = require("sys"),
-    http = require("http"),
-    url = require("url"),
-    path = require("path"),
-    fs = require("fs"),
-    events = require("events");
-
-function load_static_file(uri, response) {
-	var filename = path.join(process.cwd(), uri);
-	path.exists(filename, function(exists) {
-		if(!exists) {
-			response.sendHeader(404, {"Content-Type": "text/plain"});
-			response.write("404 Not Found\n");
-			response.close();
-			return;
-		}
+var http = require('http'), 
+		url = require('url'),
+		fs = require('fs'),
+		io = require('../javascripts/socket.io-node/index'),
+		sys = require('sys'),
 		
-		fs.readFile(filename, "binary", function(err, file) {
-			if(err) {
-				response.sendHeader(500, {"Content-Type": "text/plain"});
-				response.write(err + "\n");
-				response.close();
-				return;
-			}
+send404 = function(res){
+	res.writeHead(404);
+	res.write('404');
+	res.end();
+};
+
+var spawn = require('child_process').spawn;
+var filename = process.ARGV[2];
+
+if (!filename)
+  return sys.puts("Usage: node <server.js> <filename>");
+
+server = http.createServer(function(req, res) {
+	// your normal server code
+	var path = url.parse(req.url).pathname;
+	switch (path){
+		case '/':
+			res.writeHead(200, {'Content-Type': 'text/html'});
+			res.write('<h1>Welcome. Try the <a href="/chat.html">chat</a> example.</h1>');
+			res.end();
+			break;
 			
-			response.sendHeader(200);
-			response.write(file, "binary");
-			response.close();
-		});
-	});
-}
-
-var twitter_client = http.createClient(80, "api.twitter.com");
-
-var tweet_emitter = new events.EventEmitter();
-
-function get_tweets() {
-	var request = twitter_client.request("GET", "/1/statuses/public_timeline.json", {"host": "api.twitter.com"});
-	request.addListener("response", function(response) {
-		var body = "";
-		response.addListener("data", function(data) {
-			body += data;
-		});
-		
-		response.addListener("end", function() {
-			var tweets = JSON.parse(body);
-			if(tweets.length > 0) {
-				tweet_emitter.emit("tweets", tweets);
+		default:
+			if (/\.(js|html|swf)$/.test(path)){
+				try {
+					var swf = path.substr(-4) === '.swf';
+					res.writeHead(200, {'Content-Type': swf ? 'application/x-shockwave-flash' : ('text/' + (path.substr(-3) === '.js' ? 'javascript' : 'html'))});
+					res.write(fs.readFileSync(__dirname + path, swf ? 'binary' : 'utf8'), swf ? 'binary' : 'utf8');
+					res.end();
+				} catch(e){ 
+					send404(res); 
+				}
+				break;
 			}
-		});
-	});
-	
-	request.close();
+		
+			send404(res);
+			break;
+	}
+});
+
+server.listen(8080);
+
+function scan(source, pattern, callback) {
+  var match;
+  source = source.toString();
+  while (source.length > 0) {
+    if (match = source.match(pattern)) {
+      callback(match);
+      source  = source.slice(match.index + match[0].length);
+    } else {
+      source = '';
+    }
+  }
 }
 
-setInterval(get_tweets, 5000);
+function parseLog(data) {
+  var expression = /([\w]+),\s+\[([^\]\s]+)\s+#([^\]]+)]\s+(\w+)\s+--\s+(\w+)?:\s+\[([^\]]+)\](.+)/;
+  // Log Format:
+  // SeverityID, [Date Time mSec #pid] SeverityLabel -- ProgName: message
+  var messages = [];
+  scan(data, expression, function(part) {
+    var date = part[2];
+    var pid = part[3]
+    var label = part[4].toLowerCase();
+    var app = part[5];
+    var phase = part[6];
+    var message = JSON.parse(part[7]);
+    message.app = app;
+    message.phase = phase;
+    message.date = date;
+    messages.push(message);
+  });
+  return messages;
+}
 
-http.createServer(function(request, response) {
-    var uri = url.parse(request.url).pathname;
-    if (uri === "/stream") {
-    	var listener = tweet_emitter.addListener("tweets", function(tweets) {
-    		response.sendHeader(200, { "Content-Type" : "text/plain" });
-    		response.write(JSON.stringify(tweets));
-    		response.close();
-    		
-    		clearTimeout(timeout);
-    	});
-    	
-    	var timeout = setTimeout(function() {
-    		response.sendHeader(200, { "Content-Type" : "text/plain" });
-    		response.write(JSON.stringify([]));
-    		response.close();
-    		if (typeof(listener) == "function")
-    		  tweet_emitter.removeListener(listener);
-    	}, 2000);
-    	
+// socket.io, I choose you
+// simplest chat application evar
+var buffer = [], 
+		json = JSON.stringify,
+		io = io.listen(server);
+		
+io.on('connection', function(client) {
+	client.send(json({ buffer: buffer }));
+	client.broadcast(json({ announcement: client.sessionId + ' connected' }));
+  
+  var tail = spawn("tail", ["-f", filename]);
+  var tailed = false;
+  tail.stdout.on("data", function (data) {
+    if (tailed) {
+    	sys.puts(data);
+    	client.send(JSON.stringify(parseLog(data)));
+    } else {
+      tailed = true;
     }
-    else {
-    	load_static_file(uri, response);
-    }
-}).listen(8080);
-
-sys.puts("Server running at http://localhost:8080/");
+  });
+  
+	client.on('disconnect', function() {
+		client.broadcast(json({ announcement: client.sessionId + ' disconnected' }));
+	});
+});

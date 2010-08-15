@@ -5,3 +5,7 @@
 config
 config/*
 config/**/*
+tmp
+tmp/*
+tmp/**/*
+*.rdb

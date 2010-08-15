@@ -32,16 +32,12 @@ $(document).ready(function() {
           services.push(formData[prop].value);
         }
       }
-            
+      
       if (firstStep) {
         options.url = "/start";
-        $.jGrowl("Loading metadata for " + $("#url-input").val(), {
-          life: 1500,
-          beforeOpen: function(e, m, o) {
-            
-          }
-        });
       } else {
+        options.url = "/finish";
+        return true;
         if (form.attr("data-step") == "step-two") {
           var service = services.pop();
           if (!service) {
@@ -49,21 +45,7 @@ $(document).ready(function() {
           }
           $("input.service[value=" + service + "]").attr("checked", false);//.attr("disabled", true);
           options.url = "/finish";
-          $.jGrowl("Publishing to " + service + "...", {
-            life: 1500,
-            beforeOpen: function(e, m, o) {
-              
-            },
-            beforeClose: function() {
-              setTimeout(function() {
-                form.trigger("submit");
-              }, 300);
-              $.jGrowl("<a href='http://digg.com/'>http://digg.com/</a>", {
-                header: "Digg Link...",
-                sticky: true
-              });
-            }
-          });
+          
         } else {
           return false;
         }

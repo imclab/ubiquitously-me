@@ -10,6 +10,21 @@ require 'haml'
 require 'json'
 require 'open-uri'
 require 'ubiquitously'
+require 'resque'
+require File.join(File.dirname(__FILE__), "job.rb")
+
+@db = Redis.new
+
+configure do
+  LOGGER = Logger.new("tmp/development.log") 
+  LOGGER.level = Logger::INFO
+end
+ 
+helpers do
+  def logger
+    LOGGER
+  end
+end
 
 Ubiquitously.configure("config/_secret.yml")
 
@@ -37,22 +52,23 @@ def urlify(url)
 end
 
 def create(params)
-  puts params.inspect
-  user = Ubiquitously::User.new(
+  data = {
+    :url   => urlify(params["url"]),
+    :title => params["title"],
+    :tags  => params["tags"].split(/,(?:\s+)?/).map { |tag| tag.strip.downcase.gsub(/[^a-z0-9]/, "-").squeeze("-") },
+    :description => params["description"],
     :username => "viatropos",
     :cookies_path => "config/_cookies.yml"
-  )
-  tags = params["tags"].split(/,\s+/) if params["tags"]
-  post = Ubiquitously::Post.new(
-    :url => urlify(params["url"]),
-    :title => params["title"],
-    :description => params["description"],
-    :tags => tags,
-    :user => user,
-    :categories => tags
-  )
-  result = post.save(params["services"])
-  JSON.generate(params)
+  }
+  
+  params["services"].each do |service|
+    data[:service] = service
+    logger.info("Ubiquitously") {"[queued] #{JSON.generate(data)}"}
+    Resque.enqueue(Job, data)
+    sleep 0.1
+  end
+  
+  ""
 end
 
 get "/" do
@@ -87,6 +103,7 @@ post "/start" do
   end
 end
 
+# [2010-08-15T12:57:39.157109 #75142]  INFO -- : [create:before] #<Ubiquitously::Digg::Post @url="http://apple.com" @title="Viatropos" @description="Creativity and Emergence. A personal blog about writing code that the world can leverage." @tags=["jquery", "html-5", "css3", "ajax", "ruby-on-rails", "ruby-on-rails-developer", "ruby-on-rails-examples", "rails-deployment", "flex", "actionscript", "flash", "open-source"]>
 post "/finish" do
   create(params)
 end
